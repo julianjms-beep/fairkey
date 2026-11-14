@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FairKey — Will the bank say yes?</title>
+<meta name="description" content="FairKey predicts whether a U.S. lender would deny a home-purchase mortgage, explains why, shows what would change it — and audits itself for fairness in all 50 states and DC. Trained on millions of real decisions. Runs in your browser.">
+<meta name="theme-color" content="#0d1b2a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="FairKey — Will the bank say yes?">
+<meta property="og:description" content="Machine learning on 12.9 million real U.S. mortgage decisions: your chance of a no, why, what would change it — and a fairness audit for all 50 states and DC. Prototype, not financial advice.">
+<meta property="og:image" content="https://julianjms-beep.github.io/fairkey/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#check">Skip to the check</a>
+
+<header class="top">
+  <a class="brand" href="#" aria-label="FairKey home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="16" r="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 16h11M25 16v5M29 16v4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+    <span>FairKey</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#check" data-i18n="nav.check">Check</a>
+    <a href="#trust" data-i18n="nav.trust">Can you trust it?</a>
+    <a href="#fair" data-i18n="nav.fair">Fairness audit</a>
+    <a href="#how" data-i18n="nav.how">How it works</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="es" aria-pressed="false">ES</button>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-in">
+    <p class="kicker" data-i18n="hero.kicker" data-fill>Machine learning on {nM} million real U.S. mortgage decisions · 50&nbsp;states&nbsp;+&nbsp;DC</p>
+    <h1 data-i18n="hero.title">Will the bank say <em>yes</em>?</h1>
+    <p class="lede" data-i18n="hero.lede">Know before you apply. FairKey predicts whether a lender would turn down your home loan, tells you why, and shows what would change the answer. It never sees your race, sex or age — and we audited it to make sure that doesn't hide unfairness.</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="#check" data-i18n="hero.cta">Check my chances</a>
+      <button class="btn ghost" type="button" id="demoBtn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg><span data-i18n="hero.demo">Watch a demo</span></button>
+    </div>
+    <ul class="hero-stats" id="heroStats">
+      <li><b id="hsN">—</b><span data-i18n="hero.s1">real decisions in the data (HMDA 2022–2025)</span></li>
+      <li><b id="hsT">—</b><span data-i18n="hero.s2">2025 applications it was tested on, never seen before</span></li>
+      <li><b>0</b><span data-i18n="hero.s3">bytes of your data sent anywhere — it runs in your browser</span></li>
+    </ul>
+    <p class="disclaimer" data-i18n="disclaimer">This project is a prototype and is not financial advice.</p>
+  </div>
+  <figure class="hero-viz">
+    <canvas id="heroCanvas" role="img" aria-label="Dots for real 2025 applications forming a house, then sorted by FairKey's predicted risk"></canvas>
+    <figcaption>
+      <span class="hero-cap" id="heroCap"></span>
+      <span class="hero-key"><i class="ok"></i><span data-i18n="hero.ok">approved</span><i class="no"></i><span data-i18n="hero.no">denied</span></span>
+    </figcaption>
+  </figure>
+</section>
+
+<main>
+<!-- ============================================================ THE CHECK -->
+<section id="check" class="band">
+  <div class="sec-head">
+    <h2 data-i18n="check.title">Check an application</h2>
+    <p data-i18n="check.sub">A home purchase anywhere in the U.S., first mortgage, a home you will live in. Change anything — the answer updates instantly.</p>
+  </div>
+
+  <div class="personas-wrap">
+    <p class="personas-lbl" data-i18n="pp.lbl">Try an example — every result is the real model:</p>
+    <div class="personas" id="personas"></div>
+    <p class="demo-pill" id="demoPill" hidden><span class="dot"></span><span data-i18n="demo.on">Demo running</span> <button type="button" id="demoStop" data-i18n="demo.stop">Stop</button></p>
+  </div>
+
+  <div class="tool">
+    <form class="inputs card" id="form" autocomplete="off" onsubmit="return false">
+      <div class="say">
+        <label for="say" data-i18n="say.lbl">Tell it in your own words</label>
+        <div class="say-row">
+          <input id="say" type="text" enterkeyhint="go" placeholder="We earn $95k, want a $400k house with 10% down, and pay $600 a month for a car">
+          <button type="button" id="sayBtn" data-i18n="say.btn">Fill in</button>
+        </div>
+        <div class="say-got" id="sayGot" aria-live="polite"></div>
+      </div>
+
+      <p class="step"><b>1</b><span data-i18n="step.1">Your money</span></p>
+      <div class="field">
+        <label for="income" data-i18n="f.income">Household income, per year</label>
+        <div class="money"><span>$</span><input id="income" inputmode="numeric" value="85,000"></div>
+        <input type="range" id="incomeR" min="20000" max="400000" step="1000" value="85000" aria-label="Household income slider">
+      </div>
+      <div class="field">
+        <label for="debts" data-i18n="f.debts">Other monthly debts (car, student loans, cards)</label>
+        <div class="money"><span>$</span><input id="debts" inputmode="numeric" value="450"></div>
+        <input type="range" id="debtsR" min="0" max="5000" step="25" value="450" aria-label="Monthly debts slider">
+      </div>
+      <label class="tg"><input type="checkbox" id="coapp"><span data-i18n="f.coapp">Applying with a co-borrower</span></label>
+
+      <p class="step"><b>2</b><span data-i18n="step.2">The home</span></p>
+      <div class="field">
+        <label for="state" data-i18n="f.state">State</label>
+        <select id="state"></select>
+      </div>
+      <div class="field">
+        <label for="price" data-i18n="f.price">Home price</label>
+        <div class="money"><span>$</span><input id="price" inputmode="numeric" value="350,000"></div>
+        <input type="range" id="priceR" min="80000" max="1500000" step="5000" value="350000" aria-label="Home price slider">
+      </div>
+      <div class="field">
+        <label for="downR"><span data-i18n="f.down">Down payment</span> <output id="downOut">10% · $35,000</output></label>
+        <input type="range" id="downR" min="0" max="60" step="0.5" value="10">
+      </div>
+      <label class="tg"><input type="checkbox" id="manuf"><span data-i18n="f.manuf">Manufactured (mobile) home</span></label>
+
+      <p class="step"><b>3</b><span data-i18n="step.3">The loan</span></p>
+      <div class="field">
+        <span class="lbl" data-i18n="f.type">Loan type</span>
+        <div class="seg" id="loanType" role="radiogroup" aria-label="Loan type">
+          <button type="button" data-v="1" aria-pressed="true" data-i18n="lt.1">Conventional</button>
+          <button type="button" data-v="2" aria-pressed="false">FHA</button>
+          <button type="button" data-v="3" aria-pressed="false" data-i18n="lt.3">VA (veterans)</button>
+          <button type="button" data-v="4" aria-pressed="false">USDA</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl" data-i18n="f.term">Term (years)</span>
+        <div class="seg" id="term" role="radiogroup" aria-label="Term">
+          <button type="button" data-v="30" aria-pressed="true">30</button>
+          <button type="button" data-v="20" aria-pressed="false">20</button>
+          <button type="button" data-v="15" aria-pressed="false">15</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lender" data-i18n="f.lender">Lender</label>
+        <select id="lender"></select>
+      </div>
+      <details class="adv">
+        <summary data-i18n="f.adv">Payment assumptions</summary>
+        <div class="row2">
+          <div class="field">
+            <label for="rate" data-i18n="f.rate">Interest rate (%)</label>
+            <input id="rate" inputmode="decimal" value="6.5">
+          </div>
+          <div class="field">
+            <label for="tax" data-i18n="f.tax">Taxes + insurance / month</label>
+            <div class="money"><span>$</span><input id="tax" inputmode="numeric" placeholder="auto"></div>
+          </div>
+        </div>
+        <p class="hint" data-i18n="f.advhint">FHA loans add the 1.75% upfront insurance to the loan and VA loans the 2.15% funding fee, as lenders do. Left empty, taxes + insurance use your state's typical property-tax rate (U.S. Census, 2024) plus its average home-insurance premium (NAIC, 2023).</p>
+      </details>
+      <div class="derived" id="derived" aria-live="polite"></div>
+      <p class="nozip" data-i18n="f.nozip"><b>Your state, yes; your county or ZIP code, no.</b> Your state only sets taxes, insurance and which lenders are there: the model itself never sees where you live. We tested adding it, and place worked as a stand-in for race: FairKey wrongly flagged more Black and Hispanic families, for almost no accuracy. <a href="#fair">See the audit</a>.</p>
+    </form>
+
+    <div class="result">
+      <div class="card verdict" id="verdict">
+        <div class="v-top">
+          <div class="v-main">
+            <span class="chip" id="bandChip">—</span>
+            <div class="v-num"><b id="pBig">—</b><span data-i18n="r.chance">chance a lender says no</span></div>
+            <p class="v-freq" id="vFreq"></p>
+          </div>
+          <div class="v-icons" id="icons" aria-hidden="true"></div>
+        </div>
+        <p id="summary" class="summary"></p>
+        <div class="reality" id="reality"></div>
+        <p id="bandText" class="band-text"></p>
+      </div>
+
+      <div class="card details">
+        <div class="dtabs" role="tablist" id="dtabs" aria-label="Details">
+          <button type="button" role="tab" data-p="why" aria-selected="true" data-i18n="tab.why">Why</button>
+          <button type="button" role="tab" data-p="change" aria-selected="false" data-i18n="tab.change">What would change it</button>
+          <button type="button" role="tab" data-p="map" aria-selected="false" data-i18n="tab.map">Your safe zone</button>
+          <button type="button" role="tab" data-p="lenders" aria-selected="false" data-i18n="tab.lenders">Lenders</button>
+          <button type="button" role="tab" data-p="ai" aria-selected="false" class="ai-tab" data-i18n="tab.ai">Inside the AI</button>
+        </div>
+
+        <div class="dpanel" data-p="why" role="tabpanel">
+          <div class="grid2">
+            <div>
+              <h3 data-i18n="r.why">Why this number</h3>
+              <p class="cap" data-i18n="r.whycap">What pushed the risk up (red) or down (green), in percentage points. Exact TreeSHAP, computed on your device.</p>
+              <div id="shap" class="bars"></div>
+              <p class="note" id="shapFoot"></p>
+            </div>
+            <div>
+              <h3 data-i18n="r.reason">If they say no, why?</h3>
+              <p class="cap" data-i18n="r.reasoncap">A second model, trained on the reasons lenders gave for 613,955 denials (2022–2023), predicts the reason you'd most likely hear.</p>
+              <div id="reasons" class="bars"></div>
+              <p class="note" data-i18n="r.credit">Public data has no credit scores. If your credit is strong, your real risk is lower; if it is weak, higher.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dpanel" data-p="change" role="tabpanel" hidden>
+          <h3 data-i18n="r.change">What would change it</h3>
+          <p class="cap" data-i18n="r.changecap">FairKey tries realistic moves on your application and keeps the ones that lower the risk most. Tap one to try it.</p>
+          <div id="actions" class="actions"></div>
+        </div>
+
+        <div class="dpanel" data-p="map" role="tabpanel" hidden>
+          <h3 data-i18n="r.zone">Your safe zone</h3>
+          <p class="cap" data-i18n="r.zonecap">Risk for every home price and down payment, with everything else as you entered it. The ring is you. Tap the map to try another point.</p>
+          <div class="zone">
+            <canvas id="zone" width="960" height="480" aria-label="Risk map by home price and down payment"></canvas>
+            <div class="zone-tip" id="zoneTip" hidden></div>
+          </div>
+          <div class="zone-axes"><span data-i18n="r.zonex">Home price →</span><span data-i18n="r.zoney">↑ Down payment</span></div>
+          <div class="zone-key"><i class="k1"></i><span data-i18n="b.low">Low risk</span><i class="k2"></i><span data-i18n="b.medium">Uncertain</span><i class="k3"></i><span data-i18n="b.high">High risk</span></div>
+        </div>
+
+        <div class="dpanel" data-p="lenders" role="tabpanel" hidden>
+          <div class="grid2">
+            <div>
+              <h3 data-i18n="r.lenders">Lenders for an application like yours</h3>
+              <p class="cap" id="lendersCap"></p>
+              <div id="lenders" class="bars"></div>
+              <p class="note" data-i18n="r.lendernote">Lenders serve different customers (for example, credit histories we can't see), so treat this as a starting point for shopping around, not a ranking of who is fair.</p>
+            </div>
+            <div class="same-risk">
+              <h3 data-i18n="r.same">Same risk, different outcomes</h3>
+              <p class="cap" id="sameCap"></p>
+              <div id="sameBars" class="bars"></div>
+              <p class="note" data-i18n="r.rights">Lenders must tell you the specific reasons for a denial, and it is illegal to deny credit because of race, color, religion, national origin, sex, marital status or age (Equal Credit Opportunity Act). If you think it happened to you, you can <a href="https://www.consumerfinance.gov/complaint/" rel="noopener" target="_blank">file a complaint with the CFPB</a>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dpanel" data-p="ai" role="tabpanel" hidden>
+          <div class="ai-head">
+            <div>
+              <h3 data-i18n="ai.title">Watch the AI decide</h3>
+              <p class="cap" id="aiCap"></p>
+            </div>
+            <button type="button" class="btn small" id="aiPlay"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg><span data-i18n="ai.replay">Replay</span></button>
+          </div>
+          <div class="ai-race">
+            <svg id="aiChart" viewBox="0 0 640 230" role="img" aria-label="The chance of a no, tree by tree"></svg>
+            <div class="ai-counter"><span><b id="aiTree">0</b> / <span id="aiN">—</span> <span data-i18n="ai.trees">trees</span></span><b id="aiP" class="ai-p">—</b></div>
+          </div>
+          <div class="ai-tree">
+            <p class="ai-tree-t" id="aiTreeTitle"></p>
+            <ol class="ai-path" id="aiPath"></ol>
+            <p class="note" id="aiNote"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<a class="mbar" id="mbar" href="#verdict" aria-hidden="true" tabindex="-1"><i></i><b id="mbP">—</b><span id="mbB"></span></a>
+
+<!-- ============================================================ TRUST -->
+<section id="trust" class="band alt">
+  <div class="sec-head">
+    <h2 data-i18n="t.title">Can you trust it?</h2>
+    <p data-i18n="t.sub">We judged FairKey the way a careful lender or regulator would: on applications from a year it had never seen, against simple rules people already use.</p>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2 wide">
+    <div class="card">
+      <h3 data-i18n="t.pr">Finding the denials without crying wolf</h3>
+      <p class="cap" data-i18n="t.prcap">Precision–recall on 2025 applications. Higher is better: catch more denials while warning fewer families who would have been approved.</p>
+      <svg id="prChart" class="chart" viewBox="0 0 460 300" role="img" aria-label="Precision-recall curves"></svg>
+      <div class="legend" id="prLegend"></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="t.cal">When it says 30%, is it 30%?</h3>
+      <p class="cap" data-i18n="t.calcap">Each dot groups 2025 applications by predicted risk. On the line = honest probabilities a person can act on.</p>
+      <svg id="calChart" class="chart" viewBox="0 0 460 300" role="img" aria-label="Calibration chart"></svg>
+      <div class="bands-table" id="bandsTable"></div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card callout">
+      <h3 data-i18n="t.acc">Why not accuracy?</h3>
+      <p id="accText"></p>
+    </div>
+    <div class="card callout">
+      <h3 data-i18n="t.leak">The leak we refused</h3>
+      <p data-i18n="t.leaktext">HMDA records an interest rate only for loans that were made. A model allowed to look at it is "99.98% accurate" — and useless, because you don't have a rate before you apply. The same with "pre-approved": denied pre-approvals are filed under another code, so all 740,803 pre-approved applications in the data were approved. And we set aside the 15% of records with blanks: 41% of them were denials, so a model would learn that "the lender never filled this in" means "no".</p>
+    </div>
+    <div class="card callout">
+      <h3 data-i18n="t.engine">The same model, to the decimal</h3>
+      <p data-i18n="t.enginetext">The model in your browser is the exact one we tested. On 500 test applications our JavaScript engine matches LightGBM's own predictions within 0.000002 and its SHAP explanations within 0.000001.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ FAIRNESS -->
+<section id="fair" class="band dark">
+  <div class="sec-head">
+    <h2 data-i18n="a.title">The fairness audit</h2>
+    <p data-i18n="a.sub">FairKey never sees race, ethnicity, sex or age. But being blind is not the same as being fair — other inputs can stand in for them. So we checked, on 2025 applications it had never seen.</p>
+  </div>
+
+  <div class="audit-top">
+    <div class="card dk">
+      <div class="tabs" role="tablist" id="auditTabs">
+        <button role="tab" aria-selected="true" data-k="race" data-i18n="a.race">Race &amp; ethnicity</button>
+        <button role="tab" aria-selected="false" data-k="sex" data-i18n="a.sex">Sex</button>
+        <button role="tab" aria-selected="false" data-k="age" data-i18n="a.age">Age</button>
+      </div>
+      <div id="auditTable" class="audit-table"></div>
+      <p class="cap" data-i18n="a.tablecap">Expected = what FairKey predicts from finances alone. Ratio above 1 = denied more often than finances explain (95% bootstrap interval). Wrongly flagged = approved families FairKey had marked "high risk". Caught = denials FairKey had marked "high risk".</p>
+    </div>
+    <div class="card dk">
+      <h3 data-i18n="a.cal">For the same predicted risk, who is denied more?</h3>
+      <svg id="groupCal" class="chart" viewBox="0 0 460 300" role="img" aria-label="Calibration by race"></svg>
+      <div class="legend" id="groupLegend"></div>
+    </div>
+  </div>
+
+  <div class="finding" id="finding"></div>
+
+  <div class="card dk st-card" id="stCard">
+    <div class="st-head">
+      <div>
+        <h3 data-i18n="a.states">Is it the same in every state?</h3>
+        <p class="cap" data-i18n="a.statescap">One square per state. The number compares Black (or Hispanic) and White applicants FairKey rated the same, in 2025: ×1.5 means they were denied 1.5 times as often, beyond what their finances explain. Tap a state.</p>
+      </div>
+      <div class="tabs" role="tablist" id="stTabs">
+        <button type="button" role="tab" aria-selected="true" data-g="black" data-i18n="a.stB">Black vs. White</button>
+        <button type="button" role="tab" aria-selected="false" data-g="hispanic" data-i18n="a.stH">Hispanic vs. White</button>
+      </div>
+    </div>
+    <div class="st-body">
+      <svg id="stMap" class="st-map" viewBox="0 0 590 428" role="group" aria-label="Tile map of the U.S. states"></svg>
+      <div class="st-side">
+        <div id="stInfo" class="st-info" aria-live="polite"></div>
+        <div id="stKey" class="st-key"></div>
+        <p class="note" id="stNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2 wide">
+    <div class="card dk">
+      <h3 data-i18n="a.proxy">Can the inputs reveal race?</h3>
+      <p class="cap" data-i18n="a.proxycap">We trained a second model to guess whether an applicant is Black or Hispanic (vs. White) from each set of inputs. 0.5 = no better than a coin; 1.0 = perfect.</p>
+      <div id="proxy" class="bars"></div>
+      <p class="note" id="proxyNote"></p>
+    </div>
+    <div class="card dk">
+      <h3 data-i18n="a.nb">Which version did we ship?</h3>
+      <p class="cap" data-i18n="a.nbcap">We trained five versions on the same years and compared accuracy with how often each one wrongly flagged approved families (Black · Hispanic · White).</p>
+      <div id="nb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ HOW -->
+<section id="how" class="band">
+  <div class="sec-head">
+    <h2 data-i18n="h.title">How it works</h2>
+    <p data-i18n="h.sub">Every step is in the open notebook and runs again from public data.</p>
+  </div>
+  <ol class="pipeline" id="pipeline">
+    <li><b data-i18n="h.1t">Real decisions</b><span data-i18n="h.1" data-fill>Every home-purchase application in the 50 states and DC that lenders reported to the U.S. government (HMDA), 2022–2025: {nAll} million.</span></li>
+    <li><b data-i18n="h.2t">Leak check</b><span data-i18n="h.2">Remove anything known only after the decision (interest rate, underwriting system) and records with blanks.</span></li>
+    <li><b data-i18n="h.3t">Learn</b><span data-i18n="h.3">Gradient-boosted trees (LightGBM) learn from 2022–2023, with a built-in guarantee: more debt or a smaller down payment can never lower the risk.</span></li>
+    <li><b data-i18n="h.4t">Calibrate</b><span data-i18n="h.4">2024 tunes the model and turns scores into honest probabilities.</span></li>
+    <li><b data-i18n="h.5t">Test once</b><span data-i18n="h.5">2025 applications, never touched before, against a 43% debt rule and logistic regression.</span></li>
+    <li><b data-i18n="h.6t">Audit</b><span data-i18n="h.6">Race, sex and age gaps, a proxy detector, and a neighbourhood model we chose not to ship.</span></li>
+    <li><b data-i18n="h.7t">Your browser</b><span data-i18n="h.7">The trees, TreeSHAP explanations, the reason model and the what-if search all run on your device.</span></li>
+  </ol>
+
+  <div class="grid2 wide">
+    <div class="card">
+      <h3 data-i18n="h.ai">Where the AI is</h3>
+      <ul class="ticks">
+        <li data-i18n="h.ai1" data-fill><b>Risk model</b> — {nRisk} boosted trees predict the chance of denial from {nFeat} inputs.</li>
+        <li data-i18n="h.ai2" data-fill><b>Reason model</b> — {nReason} trees predict which of six reasons a lender would give.</li>
+        <li data-i18n="h.ai3"><b>Explanations</b> — exact TreeSHAP splits every prediction into the part each answer caused.</li>
+        <li data-i18n="h.ai4"><b>What-if search</b> — the model tests realistic changes and ranks them.</li>
+        <li data-i18n="h.ai5"><b>Fairness audit</b> — observed vs. expected outcomes, error rates, and a proxy-detector model.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 data-i18n="h.lim">Where it fails</h3>
+      <ul class="ticks warn">
+        <li data-i18n="h.l1">No credit scores in public data — the biggest thing a lender sees that FairKey can't.</li>
+        <li data-i18n="h.l2">Home purchases only, first mortgages on homes people will live in; no Puerto Rico or other territories.</li>
+        <li data-i18n="h.l3">Debt-to-income here is our estimate; the lender computes its own.</li>
+        <li data-i18n="h.l4">It learns from past decisions, including any unfairness in them. The audit measures that; it cannot remove it from the world.</li>
+        <li data-i18n="h.l5" data-fill>A prediction, not a promise: in the "likely yes" band, {lowDen} in 100 were still denied.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <p class="disclaimer" data-i18n="disclaimer">This project is a prototype and is not financial advice.</p>
+  <p data-i18n="foot.src">Data: Consumer Financial Protection Bureau / FFIEC, Home Mortgage Disclosure Act (HMDA) Snapshot National Loan-Level Dataset 2022–2025 (public domain); U.S. Census Bureau, American Community Survey 2024 (property taxes, home values); NAIC Homeowners Insurance Report, data for 2023 (insurance premiums).</p>
+  <p data-i18n="foot.tools">Built for the Veritas AI International High School Hackathon with Python, pandas, LightGBM, scikit-learn and plain JavaScript, with help from Claude Code (Anthropic) as a coding assistant.</p>
+</footer>
+
+<div class="loading" id="loading"><span></span><p id="loadMsg">Loading the AI into your browser: thousands of decision trees learned from millions of real mortgage decisions. Nothing you type will leave your device.</p></div>
+<script src="fk-model.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

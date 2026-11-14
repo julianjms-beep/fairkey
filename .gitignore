@@ -1,0 +1,12 @@
+data/raw/
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+CHULETA.md
+GUION-VIDEO.md
+video/
+.playwright-mcp/
+data/us/
+data/*.parquet
+data/notebook_facts.json
