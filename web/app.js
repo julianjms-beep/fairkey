@@ -17,6 +17,8 @@
     return s;
   };
   const loc = () => (LANG === "es" ? "es-US" : "en-US");
+  // the site always opens in English; Spanish is one tap away (or a link with ?lang=es)
+  const startLang = () => (new URLSearchParams(location.search).get("lang") === "es" ? "es" : "en");
   const nf = (v, d = 0) => new Intl.NumberFormat(loc(), { maximumFractionDigits: d, minimumFractionDigits: d }).format(v);
   const usd = v => new Intl.NumberFormat(loc(), { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
   const pc = (p, d = 0) => nf(100 * p, d) + "%";
@@ -41,7 +43,6 @@
       $$("[data-fill]").forEach(el => { el.innerHTML = el.innerHTML.replace(/\{(\w+)\}/g, (m, k) => (FILL[k] ?? m)); });
     }
     document.title = l === "es" ? "FairKey — ¿Te dirá que sí el banco?" : "FairKey — Will the bank say yes?";
-    try { localStorage.setItem("fk-lang", l); } catch (e) { /* private mode */ }
     $("#say").placeholder = t("say.ph");
     if (META) { fillSelects(); renderPersonas(); renderStatic(); update(); heroRelabel(); }
   }
@@ -1155,7 +1156,7 @@
     const get = u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
     document.documentElement.classList.add("js");
     try {                                        // say what is loading, in the visitor's language, before the data arrives
-      const l0 = localStorage.getItem("fk-lang") || ((navigator.language || "").startsWith("es") ? "es" : "en");
+      const l0 = startLang();
       const msg = ((window.I18N[l0] || {}).dyn || {})["load.msg"];
       if (msg) $("#loadMsg").textContent = msg;
     } catch (e) { /* keep the English text */ }
@@ -1180,8 +1181,7 @@
     $("#say").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runSay(); } });
     $("#form").addEventListener("pointerdown", e => { if (e.isTrusted && demoT) stopDemo(); });
     $$("#auditTabs button").forEach(b => b.addEventListener("click", () => renderAudit(b.dataset.k)));
-    let l = "en";
-    try { l = localStorage.getItem("fk-lang") || ((navigator.language || "").startsWith("es") ? "es" : "en"); } catch (e) { /* ignore */ }
+    const l = startLang();
     fillSelects();
     syncForm();
     applyLang(l);
