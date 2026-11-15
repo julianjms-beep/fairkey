@@ -96,6 +96,26 @@ Loads the project code (`hmda_data.py`, `features.py`, `train.py`) and the resul
 (`web/data/*.json`, written by `train.py` and `audit.py`).
 """)
 code("""
+# Setup: get the project files and the prepared data if they are not here yet, so this runs anywhere (Colab included).
+# Run the cells in order from this one (in Colab: Runtime > Run all). The first run downloads about 450 MB.
+import os, subprocess, sys, urllib.request
+from pathlib import Path
+REPO = "https://github.com/julianjms-beep/fairkey"
+if not Path("hmda_data.py").exists():
+    if not Path("fairkey/hmda_data.py").exists():
+        subprocess.run(["git", "clone", "--depth", "1", REPO + ".git", "fairkey"], check=True)
+    os.chdir("fairkey")
+try:
+    import lightgbm
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "lightgbm"], check=True)
+for f in ["data/us/2022.parquet", "data/us/2023.parquet", "data/us/2024.parquet", "data/us/2025.parquet",
+          "data/predictions.parquet"]:      # made by hmda_data.py and train.py from the official CFPB files
+    if not Path(f).exists():
+        Path(f).parent.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(f"{REPO}/releases/download/data-v1/{Path(f).name}", f + ".part")
+        os.replace(f + ".part", f)
+
 import json, sys, subprocess, warnings
 from pathlib import Path
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
