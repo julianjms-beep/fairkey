@@ -193,7 +193,7 @@ window.I18N = {
       "a.proxycap": "Entrenamos un segundo modelo para adivinar si un solicitante es negro o hispano (frente a blanco) con cada conjunto de datos. 0,5 = como tirar una moneda; 1,0 = perfecto.",
       "a.nb": "¿Qué versión publicamos?",
       "a.nbcap": "Entrenamos cinco versiones con los mismos años y comparamos la precisión con la frecuencia con que cada una marcaba por error a familias aprobadas (negras · hispanas · blancas).",
-      "h.title": "Cómo funciona", "h.sub": "Cada paso está en el cuaderno abierto y se repite desde los datos públicos.",
+      "h.title": "Cómo funciona", "h.sub": "Cada paso está en el cuaderno abierto y se repite desde los datos públicos.", "h.code": "Código en GitHub", "h.nb": "Abrir el cuaderno en Colab",
       "h.1t": "Decisiones reales", "h.1": "Todas las solicitudes de compra de vivienda en los 50 estados y DC que los prestamistas comunicaron al Gobierno de EE. UU. (HMDA), 2022–2025: {nAll} millones.",
       "h.2t": "Control de trampas", "h.2": "Quitamos todo lo que solo se sabe después de la decisión (tipo de interés, sistema de evaluación) y los registros con huecos.",
       "h.3t": "Aprender", "h.3": "Árboles potenciados (LightGBM) aprenden de 2022–2023, con una garantía incorporada: más deuda o menos entrada nunca pueden bajar el riesgo.",
@@ -214,6 +214,7 @@ window.I18N = {
       "h.l4": "Aprende de decisiones pasadas, con sus injusticias incluidas. La auditoría las mide; no puede borrarlas del mundo.",
       "h.l5": "Una predicción, no una promesa: en la franja de «probablemente sí», {lowDen} de cada 100 fueron rechazados igualmente.",
       "foot.src": "Datos: Consumer Financial Protection Bureau / FFIEC, Home Mortgage Disclosure Act (HMDA), Snapshot National Loan-Level Dataset 2022–2025 (dominio público); Oficina del Censo de EE. UU., American Community Survey 2024 (impuestos sobre la propiedad, valor de las viviendas); NAIC, informe de seguros de hogar, datos de 2023 (primas).",
+      "foot.code": "Código, modelos y cuaderno: <a href=\"https://github.com/julianjms-beep/fairkey\" target=\"_blank\" rel=\"noopener\">github.com/julianjms-beep/fairkey</a>",
       "foot.tools": "Hecho para el Veritas AI International High School Hackathon con Python, pandas, LightGBM, scikit-learn y JavaScript sin librerías, con la ayuda de Claude Code (Anthropic) como asistente de programación.",
     },
     dyn: {
