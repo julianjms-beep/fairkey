@@ -144,7 +144,9 @@
   const ink = p => (p < META.bands.low ? "var(--good-ink)" : p < META.bands.high ? "var(--mid-ink)" : "var(--bad-ink)");   // for text
 
   // ---------------------------------------------------------------- form
-  const parseMoney = v => Number(String(v).replace(/[^0-9.]/g, "")) || 0;
+  // money as people type it: "350,000" and "350.000" (Spanish style) are both 350000; "1.250.000" too.
+  // A "." or "," followed by exactly three digits is a thousands separator; any other comma is a decimal point.
+  const parseMoney = v => Number(String(v).replace(/[^0-9.,]/g, "").replace(/[.,](?=\d{3}(?!\d))/g, "").replace(",", ".")) || 0;
   // state names: Spanish where they differ
   const ST_ES = { DC: "Distrito de Columbia", HI: "Hawái", LA: "Luisiana", MI: "Míchigan", MO: "Misuri", MS: "Misisipi",
     NC: "Carolina del Norte", ND: "Dakota del Norte", NJ: "Nueva Jersey", NM: "Nuevo México", NY: "Nueva York",
@@ -176,6 +178,8 @@
     $("#lender").value = S.lender;
   }
   function bindForm() {
+    for (const ev of ["input", "change", "click"])                // capture: runs before the control's own handler
+      $("#form").addEventListener(ev, e => { if (e.isTrusted) endTween(e.target); }, true);
     const pair = (num, rng, key, max) => {
       $(num).addEventListener("input", e => { S[key] = Math.min(parseMoney(e.target.value), max); $(rng).value = S[key]; update(); });
       $(num).addEventListener("blur", e => { e.target.value = nf(S[key]); });
@@ -836,6 +840,7 @@
     rows.push(`<li class="leaf"><span>${t(v > 0 ? "ai.up" : "ai.down")}</span><span class="ans ${v > 0 ? "up" : "down"}">${v > 0 ? "+" : "−"}${nf(Math.abs(v), 3)}</span></li>`);
     $("#aiTreeTitle").innerHTML = t(k === AI.top ? "ai.treeTop" : "ai.tree", { k: k + 1, n: AI.T });
     $("#aiPath").innerHTML = rows.join("");
+    $("#aiPathBox").scrollTop = 0;
     $("#aiNote").innerHTML = t(AI.avg ? "ai.noteAvg" : "ai.note", { st: stName(S.state) });
   }
   function renderAI(x) {
@@ -882,7 +887,16 @@
     markPersona(i);
     tweenTo({ ...PERSONAS[i].s, lender: "" });
   }
-  let twRaf = 0;
+  let twRaf = 0, twKeys = [], twTarget = null;
+  // you touched the form while an example was still sliding in: jump to where it was going, keep what you just did
+  function endTween(el) {
+    if (!twRaf) return;
+    cancelAnimationFrame(twRaf); twRaf = 0;
+    for (const k of twKeys) S[k] = twTarget[k];
+    const v = el && el.value, c = el && el.checked;
+    syncForm();
+    if (el && el.matches("input, select")) { if (el.type === "checkbox") el.checked = c; else el.value = v; }
+  }
   function tweenTo(target) {
     const keys = ["income", "price", "downPct", "debts"].filter(k => target[k] != null);
     const from = Object.fromEntries(keys.map(k => [k, S[k]]));
@@ -890,6 +904,7 @@
     for (const k of ["state", "loanType", "term", "coapp", "manuf", "lender", "rate"]) if (target[k] != null) S[k] = target[k];
     if (newState || target.lender != null) fillSelects();
     cancelAnimationFrame(twRaf);
+    twKeys = keys; twTarget = target;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const t0 = performance.now(), D = reduce ? 1 : 750;
     const step = now => {
@@ -897,7 +912,7 @@
       for (const key of keys) S[key] = from[key] + (target[key] - from[key]) * e;
       if (k === 1) for (const key of keys) S[key] = target[key];
       syncForm(); update();
-      if (k < 1) twRaf = requestAnimationFrame(step);
+      twRaf = k < 1 ? requestAnimationFrame(step) : 0;
     };
     twRaf = requestAnimationFrame(step);
   }
