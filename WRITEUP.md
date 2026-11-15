@@ -3,8 +3,8 @@
 **Track:** Finance · **Team:** solo entry · **Website:** [julianjms-beep.github.io/fairkey](https://julianjms-beep.github.io/fairkey/) · **Code:** [GitHub](https://github.com/julianjms-beep/fairkey) · **Notebook:** [Colab](https://colab.research.google.com/github/julianjms-beep/fairkey/blob/main/FairKey.ipynb)
 
 > **Main takeaway:** before you apply, FairKey tells you the chance a lender says no, why, and what would change it,
-> with nearly 3× fewer false alarms than the 43% rule. It also shows lenders deny Black applicants ×1.45 as often as
-> White ones with the same finances.
+> with nearly 3× fewer false alarms than the 43% rule. And lenders deny Black applicants ×1.45 as often as White ones
+> with the same finances.
 
 ## The problem
 María, a nurse in Florida, is about to apply for her first home loan. All she has is a rule of thumb: "keep
@@ -28,10 +28,9 @@ input, and which inputs secretly stand in for race?
 **Data:** public HMDA records (CFPB/FFIEC), 2022–2025: home purchases, complete records only. We refused three leaks:
 interest rates (known only after approval), incomplete records (41% denials) and "pre-approved" files (all
 740,803 approved). **Model:** LightGBM with monotone constraints, so more debt can never lower the risk; Platt
-calibration; a second model for the reason. We chose it because it beats logistic regression here and can be
-explained exactly. **Split by time:** trained on 2022–2023, tuned on 2024, tested once on 3,017,153
-applications from 2025. The trees run in our own JavaScript engine, so nothing leaves your device; on 500 tests it
-matches LightGBM within 0.000003.
+calibration; a second model for the reason. It beats logistic regression here and can be explained exactly. **Split by time:** trained on 2022–2023, tuned on 2024, tested once on 3,017,153
+applications from 2025. The trees run in our own JavaScript engine (nothing leaves your device), matching
+LightGBM within 0.000003.
 
 ## Results
 | 2025 test (never seen) | PR-AUC (95% CI) | False alarms per 1,000, catching 63% of denials |
@@ -40,13 +39,14 @@ matches LightGBM within 0.000003.
 | Logistic regression | 0.503 (0.501–0.505) | 156 |
 | **FairKey** | **0.569 (0.567–0.571)** | **121** |
 
-"Approve everyone" is 91% accurate and useless, so we use PR-AUC. The bands hold up: *likely yes* → 3.7% denied,
+"Approve everyone" is 91% accurate and useless, so we use PR-AUC. Denial rates by band: *likely yes* 3.7%,
 *uncertain* 11.0%, *high risk* 65.5%.
 
 **Fairness.** FairKey never sees race, sex or age; we used them only to audit it.
 - **Lenders:** with the same finances, Black applicants are denied ×1.45 as often as White applicants (Hispanic
-  ×1.29), clearly above 1 in all 39 states with enough data. Public data has no credit scores, so part of the gap
-  could be credit history.
+  ×1.29), clearly above 1 in all 39 states with enough data. Part of it could be credit history, which public data lacks.
+- **Sex and age:** every group is denied within ×0.92–×1.08 of what its finances predict (except applicants who didn't
+  give their sex, ×1.17), and FairKey ranks risk about as well in each group (AUC 0.80–0.84).
 - **FairKey's inputs:** an input stays only if it adds accuracy without mainly encoding race. Of five versions, the
   lender passed (+0.027 PR-AUC). The state failed: +0.005 PR-AUC, but the model got better at guessing race (proxy AUC
   0.757 → 0.813) and wrongly flagged more approved Black families (4.0% → 4.4%). So it never sees where you live.
@@ -70,7 +70,6 @@ Test it with a housing counsellor and first-time buyers, and let people add a se
 [TreeSHAP](https://arxiv.org/abs/1802.03888) · [LightGBM](https://github.com/lightgbm-org/LightGBM).
 **AI tools:** [Claude Code](https://claude.com/product/claude-code) (Anthropic) was our AI coding partner: it wrote
 most of the code and texts, while we chose the problem, directed the work and made the final decisions.
-[ElevenLabs](https://elevenlabs.io/) made the video's voice-over. The "tell it in your own words" box uses simple word
-rules, not AI.
+[ElevenLabs](https://elevenlabs.io/) voiced the video. The "own words" box uses word rules, not AI.
 
 *This project is a prototype and is not financial advice.*
