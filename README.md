@@ -169,6 +169,11 @@ trees exported to a JavaScript engine in the browser (1,231 risk trees, 1,338 re
 ## Limits (said plainly)
 
 * **No credit scores** in public data. If your credit is strong, your real risk is lower; if it is weak, higher.
+* **Its biggest blind spot:** 33% of 2025 denials (87,186) had been rated *likely yes*. For 79% of those, the lender's
+  reason was something the application numbers can't show: the appraisal (23%), paperwork (22%), credit history (19%)
+  or another reason (16%). Debt-to-income explains 62% of the denials FairKey caught but only 10% of those it missed.
+  Example: a Florida couple earning $178k, buying a $675k home with a VA loan (no down payment, 33% debt-to-income):
+  FairKey said 0.3%; the lender said no, citing credit history (notebook section 6).
 * **Lenders differ in who applies to them.** The lender comparison is a lead for shopping around, not a ranking of
   who is fair, and not proof that switching lender changes the outcome.
 * **Observational data:** "what would change it" is the model's estimate, not a promise.
@@ -217,16 +222,19 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 * **Data:** Home Mortgage Disclosure Act (HMDA) snapshot loan-level datasets and Transmittal Sheets, 2022–2025,
   published by the CFPB/FFIEC (public U.S. government data). <https://ffiec.cfpb.gov/data-publication/>
-* **State costs:** U.S. Census Bureau, American Community Survey 2024 1-year (median real estate taxes and home
-  values); NAIC, *Dwelling Fire, Homeowners Owner-Occupied, and Homeowners Tenant and Condominium/Cooperative Unit
-  Owner's Insurance Report* (2023 data, HO-3 average premium).
-* **Context:** The Markup, "The Secret Bias Hidden in Mortgage-Approval Algorithms" (2021); the Equal Credit
-  Opportunity Act; the CFPB complaint portal.
-* **Libraries:** LightGBM, scikit-learn, pandas, NumPy, PyArrow, SciPy, Matplotlib, Jupyter (nbformat, nbclient);
-  fonts Fraunces and Inter (Google Fonts). TreeSHAP follows Lundberg, Erion and Lee, *Consistent Individualized
-  Feature Attribution for Tree Ensembles* (2018).
-* **AI assistance:** code, analysis and writing were developed with Claude (Anthropic) in Claude Code. Every number
-  comes from the scripts in this repository.
+* **State costs:** U.S. Census Bureau, [American Community Survey 2024](https://data.census.gov/) 1-year (median real
+  estate taxes and home values); [NAIC](https://content.naic.org/), *Dwelling Fire, Homeowners Owner-Occupied, and
+  Homeowners Tenant and Condominium/Cooperative Unit Owner's Insurance Report* (2023 data, HO-3 average premium).
+* **Context:** The Markup,
+  ["The Secret Bias Hidden in Mortgage-Approval Algorithms"](https://themarkup.org/denied/2021/08/25/the-secret-bias-hidden-in-mortgage-approval-algorithms)
+  (2021); the Equal Credit Opportunity Act; the [CFPB complaint portal](https://www.consumerfinance.gov/complaint/).
+* **Libraries:** [LightGBM](https://github.com/lightgbm-org/LightGBM), scikit-learn, pandas, NumPy, PyArrow, SciPy,
+  Matplotlib, Jupyter (nbformat, nbclient); fonts Fraunces and Inter (Google Fonts). TreeSHAP follows Lundberg, Erion
+  and Lee, [*Consistent Individualized Feature Attribution for Tree Ensembles*](https://arxiv.org/abs/1802.03888) (2018).
+* **AI tools:** [Claude Code](https://claude.com/product/claude-code) (Anthropic) was our AI coding partner: it wrote
+  most of the code and texts, while we chose the problem, directed the work and made the final decisions. Every number
+  comes from the scripts in this repository. The demo video's voice-over is AI-generated with
+  [ElevenLabs](https://elevenlabs.io/). The "tell it in your own words" box on the site uses simple word rules, not AI.
 
 Built for the Veritas AI International High School Hackathon 2026 · Finance track.
 

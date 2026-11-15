@@ -368,16 +368,21 @@ why = pd.DataFrame({"missed (FairKey said likely yes)": missed.reason.value_coun
 why = why.loc[why.sum(axis=1).sort_values(ascending=False).index]
 FACTS.update(low_cut=pct(lo_cut, 0), n_missed=f"{len(missed):,}", miss_share=pct(len(missed) / len(den), 0),
              miss_credit=pct(why.iloc[:, 0].get("credit", 0), 0), flag_credit=pct(why.iloc[:, 1].get("credit", 0), 0),
-             miss_dti=pct(why.iloc[:, 0].get("dti", 0), 0), flag_dti=pct(why.iloc[:, 1].get("dti", 0), 0))
+             miss_dti=pct(why.iloc[:, 0].get("dti", 0), 0), flag_dti=pct(why.iloc[:, 1].get("dti", 0), 0),
+             miss_coll=pct(why.iloc[:, 0].get("collateral", 0), 0), miss_paper=pct(why.iloc[:, 0].get("paperwork", 0), 0),
+             miss_other=pct(why.iloc[:, 0].get("other", 0), 0),
+             miss_hidden=pct(why.iloc[:, 0].reindex(["collateral", "paperwork", "credit", "other"]).fillna(0).sum(), 0))
 print(f"{len(missed):,} of {len(den):,} denials in 2025 ({len(missed) / len(den):.0%}) had been rated 'likely yes'")
 why.style.format("{:.0%}")
 """)
 note("""
-«n_missed» denials («miss_share» of all 2025 denials) were rated "likely yes". Lenders gave **credit history** as the
-reason for «miss_credit» of those misses, against «flag_credit» of the denials FairKey caught; debt-to-income was the reason
-for only «miss_dti» of the misses (against «flag_dti»). In plain words: FairKey misses the families whose finances look
-fine on paper but whose credit report doesn't — and credit scores are not in the public data. This is its biggest limit,
-and the website says so next to every result.
+«n_missed» denials («miss_share» of all 2025 denials) were rated "likely yes". For «miss_hidden» of them, the lender's
+reason was something the application numbers can't show: the **appraisal** («miss_coll»), **paperwork** («miss_paper»),
+**credit history** («miss_credit») or another reason («miss_other»). Debt-to-income, which FairKey can see, was the reason
+for «flag_dti» of the denials it caught but only «miss_dti» of those it missed. In plain words: FairKey misses families whose
+numbers look fine on paper but who are turned down for something outside them (a low appraisal, missing documents, their
+credit history), and none of that is in the public data. This is its biggest limit, and the website says so next to
+every result.
 """)
 code("""
 cols = ["state", "income_k", "price_k", "ltv", "dti", "loan_type", "coapp", "p", "reason"]

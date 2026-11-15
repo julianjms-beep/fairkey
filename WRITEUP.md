@@ -1,88 +1,76 @@
 # FairKey — will a lender say yes to your mortgage?
 
-**Track:** Finance · **Website:** <https://julianjms-beep.github.io/fairkey/> · **Code and notebook:** <https://github.com/julianjms-beep/fairkey> ([`FairKey.ipynb`](https://colab.research.google.com/github/julianjms-beep/fairkey/blob/main/FairKey.ipynb))
+**Track:** Finance · **Team:** solo entry · **Website:** [julianjms-beep.github.io/fairkey](https://julianjms-beep.github.io/fairkey/) · **Code:** [GitHub](https://github.com/julianjms-beep/fairkey) · **Notebook:** [Colab](https://colab.research.google.com/github/julianjms-beep/fairkey/blob/main/FairKey.ipynb)
 
-**The problem.** A mortgage denial costs a family months, application fees and a mark on their credit file, and it
-lands hardest on first-time buyers who have no one to ask. Before applying, people get rules of thumb ("keep
-debt-to-income under 43%") that ignore everything else. Our question: **before you apply, how likely is a "no", why,
-and what would change it — and is the answer fair to everyone?**
+> **Main takeaway:** before you apply, FairKey tells you the chance a lender says no, why, and what would change it,
+> with nearly 3× fewer false alarms than the 43% rule. It also shows lenders deny Black applicants ×1.45 as often as
+> White ones with the same finances.
 
-**What we built.** A free, bilingual (English/Spanish) website for home buyers in all 50 U.S. states and DC. You enter
-your state, income, home price, down payment, other debts, loan type, term and, if you know it, the lender. It gives:
-- the **chance a lender says no**, calibrated, with a band (*likely yes / uncertain / high risk*) and how often that
-  band was really denied
-- **why**: each input's push up or down in percentage points (exact TreeSHAP, computed on your device)
-- **the reason you would most likely hear** (debt-to-income, credit, appraisal, cash, paperwork, other)
-- **what would change it**: more down payment, fewer debts, a cheaper home, another loan type or lender, and the best
-  combination
-- a **safe-zone map** of the risk for every price and down payment, and the risk for the same application at
-  the biggest lenders in your state
-- a **reality check**: how many of the 200 most similar real 2025 applications were denied, next to FairKey's number
-- **"Inside the AI"**: the 1,231 trees adding up to your answer, and any tree's real questions and vote
-- a **state-by-state fairness map**, what the law says (Equal Credit Opportunity Act) and where to file a complaint.
+## The problem
+María, a nurse in Florida, is about to apply for her first home loan. All she has is a rule of thumb: "keep
+debt-to-income under 43%". A "no" costs her months, fees and a mark on her credit file. In 2025, 1 in 11
+home-purchase applications in our data was denied (264,695), and denials do not fall equally on every group.
 
-Six example applicants in six states, a demo mode and a "tell it in your own words" box (simple word rules, not AI)
-make it quick to try.
+## What we built
+A free website in English and Spanish for all 50 states and DC. You enter your state, income, home price, down
+payment, debts, loan type and, if you know it, the lender. It shows **the chance of a "no"** with a band (*likely yes /
+uncertain / high risk*); **why** (each input's push in points, by exact TreeSHAP, and the lender's most likely reason);
+**what would change it** (more down payment, fewer debts, a cheaper home, another loan type or lender); a **reality
+check** against the 200 most similar real 2025 applications; the trees inside the AI; and a state fairness map. For
+María ($62k income, $285k home, 3.5% down, FHA) it says 20%; 35 of her 200 look-alikes were denied.
 
-**How it works.**
-- **Data:** 12.85 million complete home-purchase applications from every state, 2022–2025, from public HMDA records
-  (CFPB/FFIEC). Taxes and insurance in the monthly payment use each state's averages (Census ACS 2024, NAIC 2023).
-- **Only what you know before applying:** we found and refused three leaks. Interest rates exist only for approved
-  loans; incomplete records (15%) are 41% denials; and all 740,803 "pre-approved" applications were approved because
-  denied ones are filed elsewhere. Pre-approval first appeared in our own what-if tool as "→ 0% risk", which is how we
-  caught it.
-- **Models:** LightGBM with monotone constraints (all else equal, a higher debt-to-income or loan-to-value can never
-  lower the risk), Platt calibration, and a second LightGBM model for the denial reason.
-- **Honest split by time:** train 2022–2023 (6.8 million), choose and calibrate on 2024, test once on 3,017,153
-  applications from 2025.
-- **No server:** the trees run in a JavaScript engine we wrote, with exact TreeSHAP. On 500 test applications it
-  matches LightGBM within 0.000003. When you haven't picked a lender, it averages over your state's lenders by market
-  share; we made that exact and fast by walking each tree once for all 50 lenders (2 ms instead of 23 ms), including
-  the SHAP values of the average, checked against brute-force Shapley values.
+## What we added
+Our own idea. **Own data:** 12.85 million real U.S. mortgage applications, not a sample dataset. **Own user:**
+first-time buyers, before they apply. **Own question:** does the model treat groups unfairly when race is not an
+input, and which inputs secretly stand in for race?
 
-**Results (2025, never seen).**
+## How it works
+**Data:** public HMDA records (CFPB/FFIEC), 2022–2025: home purchases, complete records only. We refused three leaks:
+interest rates (known only after approval), incomplete records (41% denials) and "pre-approved" files (all
+740,803 approved). **Model:** LightGBM with monotone constraints, so more debt can never lower the risk; Platt
+calibration; a second model for the reason. We chose it because it beats logistic regression here and can be
+explained exactly. **Split by time:** trained on 2022–2023, tuned on 2024, tested once on 3,017,153
+applications from 2025. The trees run in our own JavaScript engine, so nothing leaves your device; on 500 tests it
+matches LightGBM within 0.000003.
 
-| | PR-AUC (95% CI) | Wrong warnings per 1,000, catching 63% of denials |
+## Results
+| 2025 test (never seen) | PR-AUC (95% CI) | False alarms per 1,000, catching 63% of denials |
 |---|---|---|
-| Debt-to-income above 43% (rule of thumb) | 0.335 (0.333–0.337) | 343 |
-| Logistic regression, same inputs | 0.503 (0.501–0.505) | 156 |
+| Rule: debt-to-income above 43% | 0.335 (0.333–0.337) | 343 |
+| Logistic regression | 0.503 (0.501–0.505) | 156 |
 | **FairKey** | **0.569 (0.567–0.571)** | **121** |
 
-- **Why not accuracy:** "approve everyone" is 91% accurate and useless, so we measure how well it finds denials
-  without false alarms (PR-AUC) and whether its percentages are true. Applications it called *likely yes* were denied
-  3.7% of the time, *uncertain* 11.0%, *high risk* 65.5% (2024: 3.7%, 11.1%, 66.5%).
-- The reason model names the lender's main reason 57.5% of the time (six options), vs. 37.4% by always guessing the
-  most common one.
+"Approve everyone" is 91% accurate and useless, so we use PR-AUC. The bands hold up: *likely yes* → 3.7% denied,
+*uncertain* 11.0%, *high risk* 65.5%.
 
-**Fairness.** FairKey never sees race, ethnicity, sex or age; we kept them only to audit.
-- **Lenders:** Black applicants were denied 17.3% of the time when their finances predicted 13.9% (×1.24); White
-  applicants 6.4% when their finances predicted 7.4% (×0.86). For the same finances, that is a **×1.45 gap**
-  (Hispanic: ×1.29). It is not one state's quirk: the gap is clearly above 1 in **all 39 states** with enough data.
-  Public data has no credit scores, so part of it could be credit history. We say so.
-- **FairKey itself:** one rule for every input: keep it only if it adds accuracy without mainly encoding race. We
-  trained five versions and ran a proxy test (can the inputs alone guess an applicant's race?). The lender passed:
-  +0.027 PR-AUC, proxy AUC 0.746 → 0.757. Place failed: the state would add only +0.005 PR-AUC but push the proxy AUC
-  to 0.813 and wrong flags for approved Black families from 4.0% to 4.4%; the county, 0.851 and 4.7%. So your state
-  sets taxes, insurance and the lender list, but the model never sees where you live.
-- Sex and age: every group within ×0.92–×1.08, except applicants who didn't give their sex (×1.17).
+**Fairness.** FairKey never sees race, sex or age; we used them only to audit it.
+- **Lenders:** with the same finances, Black applicants are denied ×1.45 as often as White applicants (Hispanic
+  ×1.29), clearly above 1 in all 39 states with enough data. Public data has no credit scores, so part of the gap
+  could be credit history.
+- **FairKey's inputs:** an input stays only if it adds accuracy without mainly encoding race. Of five versions, the
+  lender passed (+0.027 PR-AUC). The state failed: +0.005 PR-AUC, but the model got better at guessing race (proxy AUC
+  0.757 → 0.813) and wrongly flagged more approved Black families (4.0% → 4.4%). So it never sees where you live.
 
-**Where it fails.**
-- No credit scores: for someone with very strong or very weak credit, the estimate can be far off.
-- Lenders serve different customers, so "apply with lender X" is a lead, not a promise; the data cannot show cause.
-- The same answer for the same finances means real denials run above FairKey's number for Black and Hispanic
-  applicants, and wrong "high risk" flags fall unequally: 4.0% of approved Black families vs. 2.2% of White families.
-- Between 40% and 50% it runs low in 2025 (it said 44.5%, reality was 51.5%).
-- Home purchases, 2022–2025 only; small states have too few applicants to measure a gap.
+**Where it fails, and why we think so.**
+- **A real miss:** a Florida couple earning $178k, buying a $675k home with a VA loan (no down payment, 33%
+  debt-to-income). FairKey said 0.3%. The lender said no, citing credit history, which public data does not have.
+- **The pattern:** 33% of 2025 denials (87,186) had been rated *likely yes*. In nearly 4 of 5, the reason was
+  something the application numbers can't show: the appraisal (23%), paperwork (22%), credit history (19%) or
+  another reason (16%). Debt-to-income explains 62% of the denials FairKey caught, but only 10% of those it missed.
+- **Fairness:** real denials run above FairKey's number for Black and Hispanic applicants, and its wrong "high risk"
+  flags hit 4.0% of approved Black families vs. 2.2% of White families. The site shows this.
 
-**What we'd do next.** Test it with a housing counsellor and first-time buyers; add refinancing; retrain every year
-when HMDA publishes; let people add a self-reported credit range.
+## What we'd do next
+Test it with a housing counsellor and first-time buyers, and let people add a self-reported credit range.
 
-**Sources.**
-- HMDA snapshot loan-level datasets and Transmittal Sheets 2022–2025, CFPB/FFIEC.
-- U.S. Census Bureau, ACS 2024 1-year (B25103, B25077); NAIC Homeowners Insurance Report (2023 data).
-- The Markup, "The Secret Bias Hidden in Mortgage-Approval Algorithms" (2021); Equal Credit Opportunity Act.
-- Lundberg, Erion & Lee (2018), TreeSHAP.
-- Software: Python, LightGBM, scikit-learn, pandas, NumPy, PyArrow, SciPy, Matplotlib, Jupyter; fonts Fraunces and Inter.
-- AI tools: Claude Code (Anthropic, Claude Opus 5.5) helped write and debug the code and texts.
+## Sources
+[HMDA 2022–2025](https://ffiec.cfpb.gov/data-publication/) (CFPB/FFIEC) · [Census ACS 2024](https://data.census.gov/)
+(B25103, B25077) · [NAIC](https://content.naic.org/) home insurance (2023) ·
+[The Markup (2021)](https://themarkup.org/denied/2021/08/25/the-secret-bias-hidden-in-mortgage-approval-algorithms) ·
+[TreeSHAP](https://arxiv.org/abs/1802.03888) · [LightGBM](https://github.com/lightgbm-org/LightGBM).
+**AI tools:** [Claude Code](https://claude.com/product/claude-code) (Anthropic) was our AI coding partner: it wrote
+most of the code and texts, while we chose the problem, directed the work and made the final decisions.
+[ElevenLabs](https://elevenlabs.io/) made the video's voice-over. The "tell it in your own words" box uses simple word
+rules, not AI.
 
 *This project is a prototype and is not financial advice.*

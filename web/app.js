@@ -825,7 +825,8 @@
         const names = st.set.map(i => catName(f, META.cats[f][i]));
         you = catName(f, META.cats[f][val]);
         yes = st.left;
-        q = f === "lender" ? t("q.lender", { n: names.length, v: esc(names.slice(0, 2).join(", ")) + (names.length > 2 ? "…" : "") })
+        q = f === "lender" ? (names.length === 1 ? t("q.lender1", { v: esc(names[0]) })
+            : t("q.lender", { n: names.length, v: esc(names.slice(0, 2).join(", ")) + (names.length > 2 ? "…" : "") }))
           : t("q.cat", { f: FEAT_NAME(f).toLowerCase(), F: FEAT_NAME(f), v: names.join(t("or")) });
       } else if (f === "coapp" || f === "manufactured") {
         q = t("q." + f); yes = !st.left; you = null;
