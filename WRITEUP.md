@@ -28,8 +28,8 @@ input, and which inputs secretly stand in for race?
 **Data:** public HMDA records (CFPB/FFIEC), 2022–2025: home purchases, complete records only. We refused three leaks:
 interest rates (known only after approval), incomplete records (41% denials) and "pre-approved" files (all
 740,803 approved). **Model:** LightGBM with monotone constraints, so more debt can never lower the risk; Platt
-calibration; a second model for the reason. It beats logistic regression here and can be explained exactly. **Split by time:** trained on 2022–2023, tuned on 2024, tested once on 3,017,153
-applications from 2025. The trees run in our own JavaScript engine (nothing leaves your device), matching
+calibration; a second model for the reason. It beats logistic regression here and can be explained exactly. **Split by time:** trained on 2022–2023 (6.8 million), tuned on 2024, tested once on 3,017,153
+2025 applications. The trees run in our JavaScript engine (nothing leaves your device), matching
 LightGBM within 0.000003.
 
 ## Results
